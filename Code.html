@@ -1,0 +1,225 @@
+import flash.utils.Timer;
+import flash.events.TimerEvent;
+import flash.events.KeyboardEvent;
+import flash.events.Event;
+import flash.events.MouseEvent;
+import flash.display.MovieClip;
+import flash.ui.Keyboard;
+
+
+
+
+//this is the start screen
+var frontPage:FrontPage = new FrontPage();
+stage.addChild(frontPage);
+frontPage.y = 300;
+frontPage.x = 400;
+var endPage:EndPage = new EndPage();
+endPage.y = 300;
+endPage.x = 400;
+//this is the start game button
+var startGame:StartButton = new StartButton();
+startGame.x = 200;
+startGame.y = 270;
+frontPage.addChild(startGame);
+
+//This is the variable for my container which will hold the game
+var container:Container = new Container();
+
+//This is my Score/Textfield
+var myTextField:TextField= new TextField();
+myTextField.backgroundColor = 0Xffffff;
+myTextField.height = 20;
+myTextField.background = true;
+myTextField.x = 5;
+myTextField.y = 30;
+//Position of Textfield
+container.addChild(myTextField);
+//The Text field was added onto the container
+var myText:int = 0;
+//This is the integer for the score to start at 0
+myTextField.text = String("Score   : " +myText);
+//I added the word score into the string + the game score
+
+
+//This is the variable for my catcher it starts in the center and is later called by a funtion to move
+var catcher:Catcher = new Catcher();
+catcher.x = 400;
+catcher.y = 470;
+this.container.addChild(catcher);
+//The catcher is added to the container
+
+
+//This is a event listener added to the stage wich will call on the fireLisa function
+stage.addEventListener(KeyboardEvent.KEY_DOWN, fireLisa);
+
+//This is an invisible ground added to the container so when a cat hits it it will be game over
+var ground:Ground = new Ground();
+ground.x = 400;
+ground.y = 610;
+container.addChild(ground);
+
+//This is an event listener added to the start game button a mouse event when click will call the game start function
+startGame.addEventListener(MouseEvent.CLICK, gameStart);
+
+//This is my variable for lisa (missile)
+var lisa:Lisa = new Lisa();
+//i tried to get lisa into an array but could not get the missile detect to work
+
+
+//Game start function this will work when the gamestart button is clicked
+function gameStart(event:MouseEvent):void
+{
+	stage.removeChild(frontPage);
+	stage.addChild(container);
+	container.addChild(ground);
+	var myTimer:Timer = new Timer(5000);
+	myTimer.addEventListener(TimerEvent.TIMER, addFallingCat);
+	myTimer.start();
+    /*When the game starts the front page will be replaced with the game container and the ground will be added
+also the timer for adding cats at random positions starts*/
+}
+
+
+//This is the array that i have placed the fallingCats into
+var fallingCat:Array = new Array();
+function addFallingCat(Event:TimerEvent):void
+{
+	var fallingCats:Cat = new Cat();
+//The variable "fallingCats" will create a new instance of Cat controlled by the "myTimer" at intervals of 5 secs
+	fallingCats.x = Math.random() * stage.stageWidth;
+//This code will add randomly instances onto the container
+	trace("New cat was added.");
+	fallingCat.push(fallingCats);
+//The push command places the new instances of "fallingCats" into the fallingCat Array
+	this.container.addChild(fallingCats);
+//The instances are added to the container
+	detectcats(fallingCats);
+/*//The instances of fallingCats also has a timer set within the instance itself to control its movement
+from top to bottom of the stage*/
+}
+
+
+//var firedLisa:Array = new Array();
+//This is the function that will fire lisa when spacebar is pressed
+function fireLisa(event:KeyboardEvent):void
+{
+
+	if (event.keyCode == 32)
+// If statement says if spacebar is pressed then the following will happen
+	{
+		lisa.x = catcher.x;
+		lisa.y = catcher.y;
+//Lisa will be fired from the same point as the catcher is possitioned
+		trace("Lisa was Fired");
+		//firedLisa.push(fireLisa);
+		trace("Lisa was added to array");
+		this.container.addChild(lisa);
+//lisa is added to the container
+		trace(lisa);
+
+	}
+}
+//This is the detectcats funtion it adds an event listener to the cats for when they collide
+function detectcats(cat:MovieClip):void
+{
+	cat.addEventListener(Event.ENTER_FRAME, catchFallingCat);
+
+}
+//This is the function for the collision detectsion
+function catchFallingCat(event:Event):void
+{
+	if (event.target.hitTestObject(catcher))
+//if the cat wich is now event.target hits the catcher,lisa or the ground one of the following 3 events will happen. 
+	{
+		trace("hit homer");
+		trace(event.target.name);
+//When the cat hits the catcher it will become invisible
+		event.target.visible = false;
+//When cat hits catcher mytext int will add 1 to the mytextfield string
+		myText++;
+		myTextField.text = String("Score   : " +myText);
+//When cat hit catcher it removes the cat event from the frame
+		event.target.removeEventListener(Event.ENTER_FRAME, catchFallingCat);
+	}
+	if (event.target.hitTestObject(lisa))
+	{ 
+	trace("hit Lisa");
+	trace(event.target.name);
+//When the cat hits lisa it will become invisible
+	event.target.visible = false;
+//When cat hits lisa mytext int will add 1 to the mytextfield string
+	myText++;
+    myTextField.text = String("Score   : " +myText);
+//When cat hits lisa it removes the cat event from the frame
+	event.target.removeEventListener(Event.ENTER_FRAME, catchFallingCat);
+	}
+	if (event.target.hitTestObject(ground))
+	{
+		trace("hit ground");
+		trace(event.target.name);
+		event.target.visible = false;
+//When this hit occures it places the endpage over the container
+		this.container.addChild(endPage);
+//I added an eventlistener to the endpage to allow the user to re start the game from the front page
+		endPage.addEventListener(MouseEvent.CLICK, startagain);
+		
+
+	}
+}
+/*endPage.addEventListener(Event.ENTER_FRAME, stoptimer)
+function stoptimer(event:Event):void
+{
+	myTimer.stop();
+}*/
+
+//This is the start again function called when the endpage event listener is clicked
+function startagain(event:MouseEvent):void
+{
+	container.removeChild(endPage);
+	stage.addChild(frontPage);
+	stage.addChild(startGame);
+	startGame.x = 600;
+    startGame.y = 570;
+//The endpage is replaced by the front page and the start game button is added to loop the game back to the begining
+}
+
+//This is the eventlistener for the keyboard event to move the catcher
+stage.addEventListener(KeyboardEvent.KEY_DOWN, homerLeft);
+function homerLeft(event:KeyboardEvent):void
+{
+	if (event.keyCode == 37)
+//If the  left arrow is pressed catcher will move left
+	{
+		catcher.x -=  20;
+		trace("Go left");
+	}
+}
+
+//This is the eventlistener for the keyboard event to move the catcher
+stage.addEventListener(KeyboardEvent.KEY_DOWN, homerRight);
+function homerRight(event:KeyboardEvent):void
+{
+	if (event.keyCode == 39)
+//If the  right arrow is pressed catcher will move right
+	{
+		catcher.x +=  20;
+		trace("Go right");
+	}
+
+}
+
+
+/*This is a problem i am having it sorts itself out once lisa is fired 
+The timer on the instance of lisa is starting straight away
+but lisa is not added to the container until the space bar is pushed.
+lisa can not be added to a timer like "fallingCats" as she will be added 
+continiousely without pressing the space bar i cannot create a link to hold/not start
+the lisaTimer on the instance within the frame code.
+TypeError: Error #1009: Cannot access a property or method of a null object reference.
+at Lisa/timerEvent()
+at flash.utils::Timer/_timerDispatch()
+at flash.utils::Timer/tick()
+
+also i had trouble with variables once they are in a function i cant use them again such as myTimer.stop():
+*/
